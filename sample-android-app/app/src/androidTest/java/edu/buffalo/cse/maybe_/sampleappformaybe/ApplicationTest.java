@@ -1,4 +1,4 @@
-package maybe.cse.buffalo.edu.sample_android_app;
+package edu.buffalo.cse.maybe_.sampleappformaybe;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

@@ -1,13 +1,16 @@
-package maybe.cse.buffalo.edu.sample_android_app;
+package edu.buffalo.cse.maybe_.sampleappformaybe;
 
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+
+import edu.buffalo.cse.maybe_.android.library.MaybeService;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -26,6 +29,12 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+        MaybeService maybeService = MaybeService.getInstance(this);
+        maybe ("test") {
+            Log.d("test", "0");
+        } or {
+            Log.d("test", "1");
+        }
     }
 
     @Override

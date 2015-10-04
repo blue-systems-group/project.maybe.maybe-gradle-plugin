@@ -1,4 +1,4 @@
-package maybe.cse.buffalo.edu.sample_android_app;
+package edu.buffalo.cse.maybe_.sampleappformaybe;
 
 import org.junit.Test;
 

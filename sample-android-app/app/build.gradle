@@ -6,7 +6,7 @@ android {
     buildToolsVersion "23.0.0"
 
     defaultConfig {
-        applicationId "maybe.cse.buffalo.edu.sample_android_app"
+        applicationId "edu.buffalo.cse.maybe_.sample_app_for_maybe"
         minSdkVersion 19
         targetSdkVersion 23
         versionCode 1
@@ -18,6 +18,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+}
+
+repositories {
+    mavenLocal()
 }
 
 dependencies {
