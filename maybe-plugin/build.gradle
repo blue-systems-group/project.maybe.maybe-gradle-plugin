@@ -35,14 +35,27 @@ artifacts {
 group = 'edu.buffalo.cse.maybe'
 version = '0.0.1'
 
+configurations {
+    provided
+}
+
+sourceSets {
+    main {
+        compileClasspath += configurations.provided
+    }
+}
+
 // In this section you declare the dependencies for your production and test code
 dependencies {
     // We use the latest groovy 2.x version for building this library
-    compile 'org.codehaus.groovy:groovy-all:2.4.4'
     compile gradleApi()
     compile localGroovy()
+    compile 'org.codehaus.groovy:groovy-all:2.4.4'
+    provided 'com.android.tools.build:gradle:1.0.0'
 
     // We use the awesome Spock testing and specification framework
     testCompile 'org.spockframework:spock-core:1.0-groovy-2.4'
+    testCompile 'com.android.tools.build:gradle:1.0.0'
+    testCompile 'com.neenbedankt.gradle.plugins:android-apt:1.6'
     testCompile 'junit:junit:4.12'
 }
