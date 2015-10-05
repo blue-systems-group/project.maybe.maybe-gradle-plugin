@@ -23,6 +23,9 @@ apply plugin: 'groovy'
 apply plugin: 'maven'
 apply plugin: 'idea'
 
+def version = '0.0.2'
+def group = 'edu.buffalo.cse.maybe'
+
 pluginBundle {
     // These settings are set for the whole plugin bundle
     website = 'https://github.com/blue-systems-group/project.maybe.maybe-gradle-plugin'
@@ -49,10 +52,9 @@ pluginBundle {
     plugins {
         // first plugin
         MaybePlugin {
-            id = 'edu.buffalo.cse.maybe'
+            id = group
             displayName = 'Maybe plugin'
             tags = ['individual', 'android', 'plugin']
-            version = '0.0.1'
         }
     }
 
@@ -70,9 +72,9 @@ pluginBundle {
     // defaults to the project version, which would normally be sufficient.
 
     mavenCoordinates {
-        groupId = 'edu.buffalo.cse.maybe'
+        groupId = group
         artifactId = 'MaybePlugin'
-        version = '0.0.1'
+        version = version
     }
 }
 
@@ -96,8 +98,8 @@ artifacts {
 //    archives sourcesJar
 }
 
-group = 'edu.buffalo.cse.maybe'
-version = '0.0.1'
+project.group = group
+project.version = version
 
 configurations {
     provided
