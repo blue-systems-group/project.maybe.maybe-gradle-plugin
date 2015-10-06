@@ -3,7 +3,7 @@ apply plugin: 'edu.buffalo.cse.maybe'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "23.0.0"
+    buildToolsVersion "23.0.1"
 
     defaultConfig {
         applicationId "edu.buffalo.cse.maybe_.sample_app_for_maybe"
@@ -29,4 +29,9 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:23.0.0'
     compile 'com.android.support:design:23.0.0'
+}
+
+maybe {
+    packageName 'packageName' // if not set, use applicationId for app, package from manifest for library
+    version '0.1.0' // if not set, use android.defaultConfig.versionName
 }
