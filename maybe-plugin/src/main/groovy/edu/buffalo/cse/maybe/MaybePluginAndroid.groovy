@@ -67,6 +67,13 @@ public class MaybePluginAndroid implements Plugin<Project> {
                 configureCompileJavaTask(project, variant.name, variant.javaCompile, isLibrary)
             }
         }
+
+        // TODO: remove this, because it just suppress the WARNING:
+        // Conflict with dependency 'com.android.support:support-annotations'.
+        // Resolved versions for app (23.0.0) and test app (22.2.0) differ.
+        project.configurations.all {
+            resolutionStrategy.force 'com.android.support:support-annotations:23.0.0'
+        }
     }
 
     private
