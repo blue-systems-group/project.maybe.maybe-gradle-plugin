@@ -36,19 +36,6 @@ import org.gradle.api.tasks.TaskState
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.testing.Test
 
-//import static me.tatarka.RetrolambdaPlugin.checkIfExecutableExists
-//configurations {
-//    maybe
-//}
-//
-//dependencies {
-//    //    compile(name: 'maybe', ext: 'aar')
-//    maybe 'com.google.code.gson:gson:2.3.1'
-//    maybe 'com.squareup.retrofit:converter-gson:2.0.0-beta1'
-//    maybe 'com.squareup.retrofit:retrofit:2.0.0-beta1'
-//    maybe fileTree(dir: '/Users/xcv58/Dropbox/Projects-Android/MaybeLibrary/libs-maybe', include: '*.jar')
-//}
-
 /**
  * Created with IntelliJ IDEA.
  * User: evan
@@ -65,52 +52,80 @@ public class MaybePluginAndroid implements Plugin<Project> {
             println 'isLibrary'
             def android = project.extensions.getByType(LibraryExtension)
             android.libraryVariants.all { BaseVariant variant ->
-                configureCompileJavaTask(project, variant.name, variant.javaCompile)
+                configureCompileJavaTask(project, variant.name, variant.javaCompile, isLibrary)
             }
             android.testVariants.all { TestVariant variant ->
-                configureCompileJavaTask(project, variant.name, variant.javaCompile)
+                configureCompileJavaTask(project, variant.name, variant.javaCompile, isLibrary)
             }
         } else {
             println 'notLibrary'
             def android = project.extensions.getByType(AppExtension)
             android.applicationVariants.all { BaseVariant variant ->
-                configureCompileJavaTask(project, variant.name, variant.javaCompile)
+                configureCompileJavaTask(project, variant.name, variant.javaCompile, isLibrary)
             }
             android.testVariants.all { TestVariant variant ->
-                configureCompileJavaTask(project, variant.name, variant.javaCompile)
+                configureCompileJavaTask(project, variant.name, variant.javaCompile, isLibrary)
             }
         }
     }
 
     private
-    static configureCompileJavaTask(Project project, String variant, JavaCompile javaCompileTask) {
-        def oldDestDir = javaCompileTask.destinationDir
-        def newDestDir = project.file("$project.buildDir/maybe/$variant/classes")
-        println newDestDir
-        println 'project: ' + project
-        println 'variant: ' + variant
-        println 'javaCompileTask: ' + javaCompileTask
-        println 'new dir: ' + newDestDir
-        def newTaskName = javaCompileTask.name + 'Maybe'
-        def options = javaCompileTask.options
+    static String getPackageName(Project project, boolean isLibrary) {
+        def maybeExtension = project.extensions.getByType(MaybeExtension)
+        if (maybeExtension.packageName != null) {
+            return maybeExtension.packageName
+        }
+
+        if (!isLibrary) {
+            if (project.android.defaultConfig.applicationId != null) {
+                return project.android.defaultConfig.applicationId
+            }
+        }
+        def manifestFile = project.file(project.projectDir.absolutePath + '/src/main/AndroidManifest.xml')
+//            def ns = new groovy.xml.Namespace("http://schemas.android.com/apk/res/android", "android")
+        def xml = new XmlParser().parse(manifestFile)
+        return xml.attributes().package
+    }
+
+    private
+    static String getVersion(Project project, boolean isLibrary) {
+        def maybeExtension = project.extensions.getByType(MaybeExtension)
+        if (maybeExtension.version != null) {
+            return maybeExtension.version
+        }
+        if (project.android.defaultConfig.versionName != null) {
+            return project.android.defaultConfig.versionName
+        }
+        return 'unknown version'
+    }
+
+    private
+    static JavaExec createTask(Project project, String name, JavaCompile javaCompileTask, File dest, boolean upload, boolean isLibrary) {
         JavaExec maybeTask = project.task(
-                newTaskName,
+                name,
                 type: JavaExec
         ) as JavaExec
 
-//        javaCompileTask.source.forEach{ file -> println file}
+        def options = javaCompileTask.options
+
         maybeTask.inputs.file(javaCompileTask.source)
-        maybeTask.outputs.dir(newDestDir)
+        maybeTask.outputs.dir(dest)
         maybeTask.main = 'edu.buffalo.cse.blue.maybe.Main'
         maybeTask.dependsOn javaCompileTask.dependsOn.collect()
+
         maybeTask.doFirst {
+            def packageName = getPackageName(project, isLibrary)
+            def version = getVersion(project, isLibrary)
+            println packageName
+            println version
             def arguments = args
-            arguments.addAll(['-g', '-c', '-D', newDestDir])
-            arguments.addAll(['-upload'])
+            arguments.addAll(['-g', '-c', '-D', dest])
+            if (upload) {
+                arguments.addAll(['-upload'])
+            }
             arguments.addAll(['-noserial', '-postcompiler', 'javac'])
             // TODO: let user set
-            arguments.addAll(['-package', 'test'])
-//            arguments.addAll(['-package', manifestPackage()])
+            arguments.addAll(['-package', "$packageName:$version"])
 
             if (options.bootClasspath != null) {
                 arguments.addAll(['-bootclasspath', options.bootClasspath])
@@ -132,7 +147,6 @@ public class MaybePluginAndroid implements Plugin<Project> {
             }
 
             args arguments
-            println project.files(project.configurations.maybeConfig)
             classpath project.files(project.configurations.maybeConfig)
 
 //            classpath configurations.maybe
@@ -150,77 +164,29 @@ public class MaybePluginAndroid implements Plugin<Project> {
 ////                fileTree(dir: '/Users/xcv58/Dropbox/Projects-Android/MaybeLibrary/libs-maybe', include: '*.jar')
 //            }
         }
+        return maybeTask
+    }
+
+    private
+    static configureCompileJavaTask(Project project, String variant, JavaCompile javaCompileTask, boolean isLibrary) {
+        def oldDestDir = javaCompileTask.destinationDir
+        def newDestDir = project.file("$project.buildDir/maybe/$variant/classes")
+        println newDestDir
+        println 'project: ' + project
+        println 'variant: ' + variant
+        println 'javaCompileTask: ' + javaCompileTask
+        println 'new dir: ' + newDestDir
+        def uploadTaskName = "maybeUpload${variant.capitalize()}"
+        def newTaskName = javaCompileTask.name + 'Maybe'
+
+        def maybeTask = createTask(project, newTaskName, javaCompileTask, newDestDir, false, isLibrary)
+        def uploadTask = createTask(project, uploadTaskName, javaCompileTask, newDestDir, true, isLibrary)
+//        javaCompileTask.source.forEach{ file -> println file}
 
         javaCompileTask.dependsOn { newTaskName }
         javaCompileTask.doFirst {
             javaCompileTask.source = project.fileTree(dir: newDestDir.toString())
         }
-
-//        MaybeTask maybeTask = project.task(
-//                "compileMaybe${variant.capitalize()}",
-//                type: MaybeTask
-//        ) as MaybeTask
-
-//        RetrolambdaTask retrolambdaTask = project.task(
-//                "compileRetrolambda${variant.capitalize()}",
-//                type: RetrolambdaTask
-//        ) as RetrolambdaTask
-//
-//        retrolambdaTask.inputDir = newDestDir
-//        retrolambdaTask.outputDir = oldDestDir
-//        retrolambdaTask.classpath = project.files()
-//
-//        retrolambdaTask.doFirst {
-//            def classpathFiles = javaCompileTask.classpath + project.files("$project.buildDir/retrolambda/$variant")
-//            retrolambdaTask.classpath += classpathFiles
-//
-//            // bootClasspath isn't set until the last possible moment because it's expensive to look
-//            // up the android sdk path.
-//            def bootClasspath = javaCompileTask.options.bootClasspath
-//            if (bootClasspath) {
-//                retrolambdaTask.classpath += project.files(bootClasspath.tokenize(File.pathSeparator))
-//            } else {
-//                // If this is null it means the javaCompile task didn't need to run, don't bother running retrolambda either.
-//                throw new StopExecutionException()
-//            }
-//        }
-//
-//        project.gradle.taskGraph.afterTask { Task task, TaskState state ->
-//            if (task == retrolambdaTask) {
-//                // We need to set this back to subsequent android tasks work correctly.
-//                javaCompileTask.destinationDir = oldDestDir
-//            }
-//        }
-//
-//        javaCompileTask.destinationDir = newDestDir
-//        javaCompileTask.sourceCompatibility = "1.8"
-//        javaCompileTask.targetCompatibility = "1.8"
-//        javaCompileTask.finalizedBy(retrolambdaTask)
-//
-//        javaCompileTask.doFirst {
-//            def retrolambda = project.extensions.getByType(MaybeExtension)
-//            def rt = "$retrolambda.jdk/jre/lib/rt.jar"
-//
-//            javaCompileTask.classpath += project.files(rt)
-//
-//            retrolambdaTask.javaVersion = retrolambda.javaVersion
-//            retrolambdaTask.jvmArgs = retrolambda.jvmArgs
-//
-//            ensureCompileOnJava8(retrolambda, javaCompileTask)
-//        }
-//
-//        def extractAnnotations = project.tasks.findByName("extract${variant.capitalize()}Annotations")
-//        if (extractAnnotations) {
-//            extractAnnotations.deleteAllActions()
-//            project.logger.warn("$extractAnnotations.name is incompatible with java 8 sources and has been disabled.")
-//        }
-//
-//        JavaCompile compileUnitTest = (JavaCompile) project.tasks.find { task ->
-//            task.name.startsWith("compile${variant.capitalize()}UnitTestJava")
-//        }
-//        if (compileUnitTest) {
-//            configureUnitTestTask(project, variant, compileUnitTest)
-//        }
     }
 
     private
@@ -243,24 +209,6 @@ public class MaybePluginAndroid implements Plugin<Project> {
 //                def retrolambda = project.extensions.getByType(MaybeExtension)
 //                ensureRunOnJava8(retrolambda, runTask)
 //            }
-//        }
-    }
-
-    private static ensureCompileOnJava8(MaybeExtension retrolambda, JavaCompile javaCompile) {
-//        if (!retrolambda.onJava8) {
-//            // Set JDK 8 for the compiler task
-//            def javac = "${retrolambda.tryGetJdk()}/bin/javac"
-//            if (!checkIfExecutableExists(javac)) throw new ProjectConfigurationException("Cannot find executable: $javac", null)
-//            javaCompile.options.fork = true
-//            javaCompile.options.forkOptions.executable = javac
-//        }
-    }
-
-    private static ensureRunOnJava8(MaybeExtension retrolambda, Test test) {
-//        if (!retrolambda.onJava8) {
-//            def java = "${retrolambda.tryGetJdk()}/bin/java"
-//            if (!checkIfExecutableExists(java)) throw new ProjectConfigurationException("Cannot find executable: $java", null)
-//            test.executable java
 //        }
     }
 }

@@ -13,13 +13,12 @@ class MaybePlugin implements Plugin<Project> {
      */
     @Override
     void apply(Project project) {
-        println('hello world!')
-
         project.configurations {
             maybeConfig
         }
 //        project.getExtensions().create("MaybeSetting", MaybePluginExtension.class);
-//        project.extensions.create('retrolambda', RetrolambdaExtension)
+        project.extensions.create('maybe', MaybeExtension)
+        assert project.maybe instanceof MaybeExtension
 
 //        project.plugins.withType(JavaPlugin) {
 //            project.apply plugin: RetrolambdaPluginJava
