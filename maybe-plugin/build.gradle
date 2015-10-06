@@ -23,7 +23,7 @@ apply plugin: 'groovy'
 apply plugin: 'maven'
 apply plugin: 'idea'
 
-def version = '0.0.2'
+def version = '0.0.3'
 def group = 'edu.buffalo.cse.maybe'
 
 pluginBundle {
