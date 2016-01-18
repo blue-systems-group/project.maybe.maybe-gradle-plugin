@@ -51,7 +51,7 @@ class MaybePlugin implements Plugin<Project> {
                     maybeConfig 'com.google.code.gson:gson:2.3.1'
                     maybeConfig 'com.squareup.retrofit:converter-gson:2.0.0-beta1'
                     maybeConfig 'com.squareup.retrofit:retrofit:2.0.0-beta1'
-                    maybeConfig project.fileTree(dir: '/Users/xcv58/Dropbox/Projects-Android/MaybeLibrary/libs-maybe', include: '*.jar')
+                    maybeConfig 'edu.buffalo.cse.maybe:maybe-statement-compiler:0.0.4'
                 }
             }
 
