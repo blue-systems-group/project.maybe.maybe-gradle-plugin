@@ -39,8 +39,8 @@ class MaybePlugin implements Plugin<Project> {
         }
 
         project.dependencies {
-            compile 'edu.buffalo.cse.maybe:android-library:0.0.2'
-            testCompile 'edu.buffalo.cse.maybe:android-library:0.0.2'
+            compile 'edu.buffalo.cse.maybe:android-library:0.0.3'
+            testCompile 'edu.buffalo.cse.maybe:android-library:0.0.3'
         }
 
         project.afterEvaluate {
